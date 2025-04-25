@@ -222,6 +222,11 @@ export const getOrderSnapshot = async (req: Request, res: Response) : Promise<vo
         const startDate = new Date(startDateStr);
         const endDate = new Date(endDateStr);
 
+        if(startDate<new Date("2025-04-01")){
+            res.status(400).json({message: "Our Order Operation starts from 2025-04-01. Please provide date after that"});
+            return;
+        }
+
         let daysArray = [];
 
         if(type == "weekly"){
