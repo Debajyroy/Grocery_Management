@@ -1,0 +1,162 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+
+
+
+
+
+
+model User{
+  id Int @id @default(autoincrement())
+  email String @unique
+  password String
+  name String
+  location String
+
+  blogs Blog[]
+  orders Order[]
+}
+
+
+model Admin{
+  username String @id
+  password String
+  firstName String
+  middleName String?
+  lastName String
+  email String @unique
+  phoneNo String
+}
+
+
+model Supplier{
+  supplierId Int @id @default(autoincrement())
+  supplierName String
+  email String @unique
+
+  product Product[]
+}
+
+model Shipper{
+  shipperId Int @id @default(autoincrement())
+  shipperName String
+  email String @unique
+
+  shipment Shipment[]
+}
+
+
+
+
+model Blog{
+  id Int @id @default(autoincrement())
+  image String
+  title String
+  description String
+  createdDate DateTime @default(now())
+  createdBy Int
+  user User @relation(fields: [createdBy], references: [id])
+}
+
+
+
+model Task{
+  taskId Int @id @default(autoincrement())
+  taskType String
+  assignee String
+  priorityLevel String
+  description String
+  dueDate DateTime
+  location String
+}
+
+
+
+model Product{
+  productId Int @id @default(autoincrement())
+  productName String
+  productType String
+  supplierId Int
+  quantity Int
+  price Int
+  sellingPrice Int
+  dateAdded DateTime
+  totalOrder Int @default(0)
+
+  supplier Supplier @relation(fields: [supplierId], references: [supplierId])
+
+  order Order[]
+}
+
+model Order{
+  id Int @id @default(autoincrement())
+  productId Int
+  useId Int
+  dateOfEntry DateTime @default(now())
+  quantity Int
+  cashier Int
+  status OrderStatus @default(Available)
+
+  user User @relation(fields: [useId], references: [id])
+  product Product @relation(fields: [productId], references: [productId])
+
+  shipment Shipment? @relation(name: "OrderTOShipment")
+}
+
+enum OrderStatus{
+  Available
+  Closed
+  Failed
+}
+
+
+model Shipment{
+  shipmentId Int @id @default(autoincrement())
+  orderId Int @unique
+  lat Float
+  long Float
+  shipmentStatus shipmentStatusEnum @default(In_Transit)
+  deliveryDate DateTime
+  shipperId Int
+
+  shipper Shipper @relation(fields: [shipperId],references: [shipperId])
+
+  order Order @relation(name: "OrderTOShipment",fields: [orderId], references: [id])
+}
+
+enum shipmentStatusEnum{
+  Complete
+  In_Transit
+  Pending
+  Failed
+}
+
+
+model OrderSnapshot{
+  date DateTime @id
+  totalActive BigInt @default(0)
+  totalInActive BigInt @default(0)
+}
+
+model ShipmentSnapTable{
+  id Int @id @default(1)
+  Complete BigInt @default(0)
+  In_Transit BigInt @default(0)
+  Pending BigInt @default(0)
+  Failed BigInt @default(0)
+}
